@@ -4,7 +4,7 @@ Use qlenv to manage CodeQL CLI versions and allow per use case switching of vers
 Based on the awesome https://github.com/rbenv/rbenv and very much in alpha state.
 
 The version to be used can be specified in the environment variable `CODEQL_VERSION` or in the file `.codeql-version`.
-The environment variable overwrites possible version specifications in the `.codeql-version` file can exists anywhere on 
+The environment variable overwrites possible version specifications in the `.codeql-version` file. The `.codeql-version` can exists anywhere on 
 the path from the current working directory up to the root of the filesystem.
 
 A default `~/.qlenv/version` file with the version specification can created to specify a defaul version if none is specified.
@@ -22,6 +22,13 @@ git clone git@github.com:rvermeulen/qlenv` ~/.qlenv
 ## Installing a CodeQL CLI
 
 The `install` command relies on the [GitHub CLI](https://cli.github.com/) to be available on the `PATH`.
+
+## Specifying a version
+
+The command `qlenv versions` list the available versions. You can specify any of those versions in the environment variable `CODEQL_VERSION`
+or the a file `.codeql-version` that is located anywhere on the path from the current working directory up to the filesystem root.
+
+Use `qlenv version` to verify the current selected version, if any.
 
 ## Use with VS Code and the CodeQL extension
 
