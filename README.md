@@ -11,11 +11,17 @@ A default `~/.qlenv/version` file with the version specification can created to 
 
 ## Installation
 
+**Note:** `qlenv` is currently only tested on MacOS Catalina and tries to support both MacOS and Linux at this point in time.
+
 Clone the repository and ensure `~/.qlenv/bin` is on your `PATH`.
 
 ```bash
 git clone git@github.com:rvermeulen/qlenv` ~/.qlenv
 ```
+
+## Installing a CodeQL CLI
+
+The `install` command relies on the [GitHub CLI](https://cli.github.com/) to be available on the `PATH`.
 
 ## Use with VS Code and the CodeQL extension
 
