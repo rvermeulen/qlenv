@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+
+import argparse
+from pathlib import Path
+import os
+import sys
+import subprocess
+from shutil import which
+
+qlenv_home = Path.home().joinpath(".qlenv")
+
+
+def do_version(args):
+    v = current_version()
+    if v:
+        print(v)
+    else:
+        print("No current version specified!!!")
+
+
+def do_versions(args):
+    v = current_version()
+    installed_versions = get_installed_versions()
+
+    for installed_version in installed_versions:
+        if installed_version == v:
+            print(f"*{installed_version}*")
+        else:
+            print(f" {installed_version}")
+
+
+def do_exec(args):
+    version = current_version()
+    if version:
+        ql_path = qlenv_home.joinpath('versions').joinpath(
+            version).joinpath('codeql')
+        if ql_path.exists():
+            # qlenv_home.joinpath('log').write_text(f"[{Path.cwd()}] codeql {' '.join(args.args)}\n")
+            os.execv(ql_path, ['codeql'] + args.args)
+        else:
+            print(f"Version {version} is not installed!!!")
+            sys.exit(1)
+    else:
+        print("No current version specified!!!")
+        sys.exit(1)
+
+
+def do_install(args):
+    if args.list:
+        versions = get_versions()
+        if versions == None:
+            print("Failed to obtain list of releases")
+        else:
+            for version in versions:
+                print(version)
+    else:
+        if args.version:
+            versions = get_versions()
+            if args.version == "latest":
+                args.version = versions[0]
+            if versions != None:
+                if args.version in versions and not args.version in get_installed_versions():
+                    print(f"Installing CodeQL CLI {args.version}")
+                    if not download_and_unpack_release(args.version):
+                        print(f"Failed to install version {args.version}")
+                elif args.version in get_installed_versions():
+                    print(f"CodeQL CLI {args.version} is already installed!")
+                else:
+                    print(
+                        f"Version {args.version} is not in the list of available releases!")
+            else:
+                print("Failed to obtain list of releases")
+        else:
+            print("Please provide a version to install!!!")
+
+
+def has_gh():
+    return which('gh') != None
+
+
+parser = argparse.ArgumentParser(
+    description='Manage multiple CodeQL CLI installations')
+command_parsers = parser.add_subparsers()
+
+version_command_parser = command_parsers.add_parser(
+    'version', help='List the current active version')
+version_command_parser.set_defaults(func=do_version)
+versions_command_parser = command_parsers.add_parser(
+    'versions', help='List the available versions')
+versions_command_parser.set_defaults(func=do_versions)
+exec_command_parser = command_parsers.add_parser(
+    'exec', help='Execute the current active CodeQL CLI')
+exec_command_parser.add_argument(
+    'args', nargs=argparse.REMAINDER, help='Arguments to pass to CodeQL')
+exec_command_parser.set_defaults(func=do_exec)
+
+if has_gh():
+    install_command_parser = command_parsers.add_parser(
+        'install', help='Install a new CodeQL CLI version')
+    install_command_parser.add_argument(
+        '--list', '-l', action='store_true', help='List installable CodeQL CLI versions')
+    install_command_parser.add_argument(
+        'version', help='Version to install', nargs='?')
+    install_command_parser.set_defaults(func=do_install)
+
+
+def init_home():
+    qlenv_home.mkdir(exist_ok=True)
+    qlenv_home.joinpath('bin').mkdir(exist_ok=True)
+    qlenv_home.joinpath('versions').mkdir(exist_ok=True)
+
+
+def current_version():
+    if 'CODEQL_VERSION' in os.environ:
+        return os.environ['CODEQL_VERSION']
+
+    d = Path.cwd()
+    while True:
+        version_path = d.joinpath('.codeql-version')
+        if version_path.exists():
+            return version_path.read_text().rstrip()
+        if d == d.parent:
+            global_version_path = qlenv_home.joinpath('version')
+            if global_version_path.exists():
+                return global_version_path.read_text().rstrip()
+            return None
+        else:
+            d = d.parent
+
+
+def get_versions():
+    cp = subprocess.run(
+        ["gh", "release", "--repo", "https://github.com/github/codeql-cli-binaries", "list"], capture_output=True)
+    if cp.returncode != 0:
+        return None
+    versions = [l.split()[0]
+                for l in cp.stdout.decode('utf-8').splitlines()]
+    return versions
+
+
+def get_installed_versions():
+    return [p.parent.name for p in qlenv_home.joinpath(
+        "versions").glob('**/codeql')]
+
+
+def download_and_unpack_release(version):
+    p = None
+    if sys.platform.startswith("linux"):
+        p = "codeql-linux64.zip"
+    elif sys.platform.startswith("darwin"):
+        p = "codeql-osx64.zip"
+    else:
+        print(
+            f"The platform {sys.platform} is not supported by qlenv!")
+        return False
+
+    versions_path = qlenv_home.joinpath("versions")
+    release_path = versions_path.joinpath(p)
+
+    if release_path.exists():
+        release_path.unlink()
+
+    cp = subprocess.run(
+        ["gh", "release", "--repo", "https://github.com/github/codeql-cli-binaries", "download", "--pattern", p], capture_output=True, cwd=versions_path)
+    if cp.returncode != 0:
+        return False
+
+    cp = subprocess.run(["unzip", p], capture_output=True, cwd=versions_path)
+    if cp.returncode != 0:
+        release_path.unlink()
+        return False
+
+    versions_path.joinpath("codeql").rename(version)
+
+    release_path.unlink()
+    return True
+
+
+init_home()
+args = parser.parse_args()
+args.func(args)
