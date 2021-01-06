@@ -161,7 +161,7 @@ def download_and_unpack_release(version):
         release_path.unlink()
 
     cp = subprocess.run(
-        ["gh", "release", "--repo", "https://github.com/github/codeql-cli-binaries", "download", "--pattern", p], capture_output=True, cwd=versions_path)
+        ["gh", "release", "--repo", "https://github.com/github/codeql-cli-binaries", "download", "--pattern", p, version], capture_output=True, cwd=versions_path)
     if cp.returncode != 0:
         return False
 
