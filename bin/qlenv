@@ -178,4 +178,7 @@ def download_and_unpack_release(version):
 
 init_home()
 args = parser.parse_args()
-args.func(args)
+if hasattr(args, 'func'):
+    args.func(args)
+else:
+    parser.print_usage()
