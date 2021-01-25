@@ -170,7 +170,8 @@ def download_and_unpack_release(version):
         release_path.unlink()
         return False
 
-    versions_path.joinpath("codeql").rename(version)
+    version_path = versions_path.joinpath(version)
+    versions_path.joinpath("codeql").rename(version_path)
 
     release_path.unlink()
     return True
