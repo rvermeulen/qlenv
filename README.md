@@ -16,7 +16,7 @@ A default `~/.qlenv/version` file with the version specification can created to 
 Clone the repository and ensure `~/.qlenv/bin` is on your `PATH`.
 
 ```bash
-git clone git@github.com:rvermeulen/qlenv` ~/.qlenv
+git clone https://github.com/rvermeulen/qlenv.git ~/.qlenv
 ```
 
 ## Installing a CodeQL CLI
