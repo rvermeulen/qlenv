@@ -8,6 +8,12 @@ import subprocess
 from shutil import which
 
 qlenv_home = Path.home().joinpath(".qlenv")
+lgtm_compatibility = {
+    '1.26': 'v2.3.4',
+    '1.25': 'v2.2.6',
+    '1.24': 'v2.1.4',
+    '1.23': 'v2.0.1'
+}
 
 
 def do_version(args):
@@ -51,8 +57,15 @@ def do_install(args):
         if versions == None:
             print("Failed to obtain list of releases")
         else:
-            for version in versions:
-                print(version)
+            if args.compatible:
+                cli_to_lgtm = {v: k for k, v in lgtm_compatibility.items()}
+                for version in versions:
+                    if version in cli_to_lgtm:
+                        print(
+                            f"{version} -- compatible with LGTM Enterprise {cli_to_lgtm[version]}")
+            else:
+                for version in versions:
+                    print(version)
     else:
         if args.version:
             versions = get_versions()
@@ -78,6 +91,14 @@ def has_gh():
     return which('gh') != None
 
 
+def has_unzip():
+    return which('unzip') != None
+
+
+def has_install_deps():
+    return has_gh() and has_unzip()
+
+
 parser = argparse.ArgumentParser(
     description='Manage multiple CodeQL CLI installations')
 command_parsers = parser.add_subparsers()
@@ -94,11 +115,13 @@ exec_command_parser.add_argument(
     'args', nargs=argparse.REMAINDER, help='Arguments to pass to CodeQL')
 exec_command_parser.set_defaults(func=do_exec)
 
-if has_gh():
+if has_install_deps():
     install_command_parser = command_parsers.add_parser(
         'install', help='Install a new CodeQL CLI version')
     install_command_parser.add_argument(
         '--list', '-l', action='store_true', help='List installable CodeQL CLI versions')
+    install_command_parser.add_argument(
+        '--compatible', '-c', action='store_true', help='List installable CodeQL CLI versions producing databases compatible with LGTM')
     install_command_parser.add_argument(
         'version', help='Version to install', nargs='?')
     install_command_parser.set_defaults(func=do_install)
