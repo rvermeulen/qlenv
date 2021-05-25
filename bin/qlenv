@@ -9,6 +9,7 @@ from shutil import which
 
 qlenv_home = Path.home().joinpath(".qlenv")
 lgtm_compatibility = {
+    '1.27': 'v2.4.6',
     '1.26': 'v2.3.4',
     '1.25': 'v2.2.6',
     '1.24': 'v2.1.4',
