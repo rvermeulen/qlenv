@@ -1,3 +1,5 @@
+**DEPRECATED** in favour of https://github.com/github/gh-codeql
+
 # Groom your CodeQL CLI environment with qlenv
 
 Use qlenv to manage CodeQL CLI versions and allow per use case switching of versions.
